@@ -1,3 +1,8 @@
+nodejs
+npm
+jupyter_contrib_nbextensions
+opencv_jupyter_ui
+ipycanvas
 ultralytics
 opencv-python
 pyyaml
@@ -8,3 +13,6 @@ matplotlib
 ipywidgets
 onvif-zeep
 nbgitpuller
+flake8
+jupyterthemes
+requests

@@ -3,7 +3,8 @@ FROM quay.io/jupyter/minimal-notebook:python-3.12.7
 USER root
 
 RUN apt-get update && \
-    apt-get install -y gpg
+    apt-get install -y gpg && \
+    apt-get install -y ffmpeg libsm6 libxext6
 
 RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
     chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg && \
@@ -18,14 +19,10 @@ RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --d
     apt-get install -y git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 USER ${NB_UID}
-
-# Install in the default python3 environment
-RUN pip install --no-cache-dir 'flake8' && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
 
 # Install from the requirements.txt file
 COPY --chown=${NB_UID}:${NB_GID} requirements.txt /tmp/
