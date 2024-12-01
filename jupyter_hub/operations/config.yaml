@@ -27,7 +27,7 @@ singleuser:
     # Inspect the Dockerfile at:
     # https://github.com/jupyter/docker-stacks/tree/HEAD/datascience-notebook/Dockerfile
     name: saitcho/labs-cv
-    tag: "0.1.6"
+    tag: "0.1.8"
   # `cmd: null` allows the custom CMD of the Jupyter docker-stacks to be used
   # which performs further customization on startup.
   lifecycleHooks:

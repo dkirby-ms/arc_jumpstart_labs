@@ -1,7 +1,7 @@
 #!/bin/bash
 
-helm repo add jupyterhub https://hub.jupyter.org/helm-chart/
-helm repo update
+# helm repo add jupyterhub https://hub.jupyter.org/helm-chart/
+# helm repo update
 
 helm upgrade --cleanup-on-fail \
   --install js-labs jupyterhub/jupyterhub \
