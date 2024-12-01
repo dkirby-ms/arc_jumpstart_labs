@@ -1,0 +1,10 @@
+ultralytics
+opencv-python
+pyyaml
+paho-mqtt
+openvino
+tqdm
+matplotlib
+ipywidgets
+onvif-zeep
+nbgitpuller
