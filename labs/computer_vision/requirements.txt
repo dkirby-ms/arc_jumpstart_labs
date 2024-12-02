@@ -14,5 +14,4 @@ ipywidgets
 onvif-zeep
 nbgitpuller
 flake8
-jupyterthemes
 requests
