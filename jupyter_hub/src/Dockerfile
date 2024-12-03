@@ -22,13 +22,15 @@ RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --d
 # Install Azure CLI
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
+# Override editor defaults
+COPY ./overrides.json /opt/conda/share/jupyter/lab/settings/overrides.json
+
 USER ${NB_UID}
 
 # Install from the requirements.txt file
 COPY --chown=${NB_UID}:${NB_GID} requirements.txt /tmp/
+
 RUN pip install --no-cache-dir --requirement /tmp/requirements.txt && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
 
-# Change jupyter theme
-RUN jt -t oceans16
