@@ -37,5 +37,22 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
     servicePrincipalProfile: {
       clientId: 'msi'
     }
+    addonProfiles: {
+      azureKeyvaultSecretsProvider: {
+        enabled: true
+        config: {
+          enableSecretRotation: 'true'
+          rotationPollInterval: '2m'
+        }
+      }
+    }
+    oidcIssuerProfile: {
+      enabled: true
+    }
+    securityProfile: {
+      workloadIdentity: {
+        enabled: true
+      }
+    }
   }
 }
