@@ -3,7 +3,7 @@ param clusterName string = 'myAksCluster'
 param nodeCount int = 1
 param minCount int = 1
 param maxCount int = 3
-param nodeSize string = 'Standard_B2s' // Updated to a more cost-effective node size
+param nodeSize string = 'Standard_D2s_v5' // Updated to a more cost-effective node size
 param userIdentityId string
 
 resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
@@ -39,5 +39,3 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
     }
   }
 }
-
-output aksClusterPrincipalId string = aksCluster.identity.userAssignedIdentities[userIdentityId].principalId

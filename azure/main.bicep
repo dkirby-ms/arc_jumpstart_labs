@@ -3,10 +3,18 @@ param clusterName string = 'aks-jslabs'
 param nodeCount int = 1
 param minCount int = 1
 param maxCount int = 3
-param nodeSize string = 'Standard_B2s'
+param nodeSize string = 'Standard_D4s_v5'
 param keyVaultName string = 'kv-jslabs'
 param identityName string = 'id-jslabs'
 param registryName string = 'crjslabs'
+
+module keyVaultModule 'operations/keyvault.bicep' = {
+  name: 'deployKeyVault'
+  params: {
+    location: location
+    keyVaultName: keyVaultName
+  }
+}
 
 module userIdentityModule 'operations/userIdentity.bicep' = {
   name: 'deployUserIdentity'
@@ -35,16 +43,14 @@ module aksModule 'kubernetes/aks.bicep' = {
     maxCount: maxCount
     nodeSize: nodeSize
     userIdentityId: userIdentityModule.outputs.identityId
-
   }
 }
 
-module keyVaultModule 'operations/keyvault.bicep' = {
-  name: 'deployKeyVault'
+module roleAssignment 'operations/roleAssignments.bicep' = {
+  name: 'roleAssignment'
   params: {
-    location: location
-    keyVaultName: keyVaultName
-    aksClusterId: aksModule.outputs.aksClusterPrincipalId
-    userIdentityPrincipalId: userIdentityModule.outputs.principalId
+    keyVaultId: keyVaultModule.outputs.keyVaultId
+    userIdentityId: userIdentityModule.outputs.principalId
   }
 }
+
