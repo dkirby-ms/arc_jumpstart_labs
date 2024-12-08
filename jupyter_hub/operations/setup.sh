@@ -4,8 +4,8 @@
 # helm repo update
 
 helm upgrade --cleanup-on-fail \
-  --install js-labs jupyterhub/jupyterhub \
-  --namespace js-labs \
+  --install jslabs jupyterhub/jupyterhub \
+  --namespace jslabs \
   --create-namespace \
   --version=4.0.0 \
   --values config.yaml

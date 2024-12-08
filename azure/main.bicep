@@ -7,8 +7,9 @@ param nodeSize string = 'Standard_D4s_v5'
 param keyVaultName string = 'kv-jslabs'
 param identityName string = 'id-jslabs'
 param registryName string = 'crjslabs'
+param gatewayName string = 'jslabs-appgw'
 
-module keyVaultModule 'operations/keyvault.bicep' = {
+module keyVaultModule 'security/keyvault.bicep' = {
   name: 'deployKeyVault'
   params: {
     location: location
@@ -16,7 +17,7 @@ module keyVaultModule 'operations/keyvault.bicep' = {
   }
 }
 
-module userIdentityModule 'operations/userIdentity.bicep' = {
+module userIdentityModule 'security/userIdentity.bicep' = {
   name: 'deployUserIdentity'
   params: {
     location: location
@@ -24,12 +25,28 @@ module userIdentityModule 'operations/userIdentity.bicep' = {
   }
 }
 
-module containerRegistryModule 'operations/containerRegistry.bicep' = {
+module containerRegistryModule 'kubernetes/containerRegistry.bicep' = {
   name: 'deployContainerRegistry'
   params: {
     location: location
     registryName: registryName
     userIdentityPrincipalId: userIdentityModule.outputs.principalId
+  }
+}
+
+module networkModule 'kubernetes/network.bicep' = {
+  name: 'deployNetwork'
+  params: {
+    location: location
+  }
+}
+
+module appGatewayModule 'security/appgw.bicep' = {
+  name: 'deployAppGateway'
+  params: {
+    location: location
+    gatewayName: gatewayName
+    subnetId: networkModule.outputs.subnetId
   }
 }
 
@@ -43,10 +60,12 @@ module aksModule 'kubernetes/aks.bicep' = {
     maxCount: maxCount
     nodeSize: nodeSize
     userIdentityId: userIdentityModule.outputs.identityId
+    subnetId: networkModule.outputs.subnetId
+    gatewayName: gatewayName
   }
 }
 
-module roleAssignment 'operations/roleAssignments.bicep' = {
+module roleAssignment 'security/roleAssignments.bicep' = {
   name: 'roleAssignment'
   params: {
     keyVaultId: keyVaultModule.outputs.keyVaultId

@@ -47,43 +47,46 @@ singleuser:
   memory:
     limit: 4G
     guarantee: 512M
-  
-# enable https with letsencrypt
-proxy:
-  https:
-    enabled: true
-    hosts:
-      - jslabs.kirbytoso.xyz
-    letsencrypt:
-      contactEmail: dakir@microsoft.com
 
-# Setup authentication
-hub:
-  config:
-    AzureAdOAuthenticator:
-      login_service: Azure AD B2C
-      client_id: ${OAUTH_CLIENT_ID}
-      client_secret: ${OAUTH_CLIENT_SECRET}
-      authorize_url: https://agora9.b2clogin.com/agora9.onmicrosoft.com/B2C_1_signupsignin/oauth2/v2.0/authorize
-      token_url: https://agora9.b2clogin.com/agora9.onmicrosoft.com/B2C_1_signupsignin/oauth2/v2.0/token
-      scope:
-        - openid
-        - "6933f58d-ffc4-4495-8dae-178180d3ffad"
-      oauth_callback_url: "https://jslabs.kirbytoso.xyz/hub/oauth_callback"
-      allow_all: true
-    JupyterHub:
-      authenticator_class: azuread
-  extraEnv:
-    OAUTH_CLIENT_ID:
-      valueFrom:
-        secretKeyRef:
-          name: azure-b2c-secret
-          key: client_id
-    OAUTH_CLIENT_SECRET:
-      valueFrom:
-        secretKeyRef:
-          name: azure-b2c-secret
-          key: client_secret
+ingress:
+  enabled: true
+
+# enable https with letsencrypt
+# proxy:
+#   https:
+#     enabled: true
+#     hosts:
+#       - jslabs.kirbytoso.xyz
+#     letsencrypt:
+#       contactEmail: dakir@microsoft.com
+
+# # Setup authentication
+# hub:
+#   config:
+#     AzureAdOAuthenticator:
+#       login_service: Azure AD B2C
+#       # client_id: $OAUTH_CLIENT_ID
+#       # client_secret: $OAUTH_CLIENT_SECRET
+#       authorize_url: https://agora9.b2clogin.com/agora9.onmicrosoft.com/B2C_1_signupsignin/oauth2/v2.0/authorize
+#       token_url: https://agora9.b2clogin.com/agora9.onmicrosoft.com/B2C_1_signupsignin/oauth2/v2.0/token
+#       scope:
+#         - openid
+#         - "6933f58d-ffc4-4495-8dae-178180d3ffad"
+#       oauth_callback_url: "https://jslabs.kirbytoso.xyz/hub/oauth_callback"
+#       allow_all: true
+#     JupyterHub:
+#       authenticator_class: azuread
+#   extraEnv:
+#     OAUTH_CLIENT_ID:
+#       valueFrom:
+#         secretKeyRef:
+#           name: azure-b2c-secret
+#           key: client_id
+#     OAUTH_CLIENT_SECRET:
+#       valueFrom:
+#         secretKeyRef:
+#           name: azure-b2c-secret
+#           key: client_secret
           
 
           
