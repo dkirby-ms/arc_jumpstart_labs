@@ -8,6 +8,10 @@ param keyVaultName string = 'kv-jslabs'
 param identityName string = 'id-jslabs'
 param registryName string = 'crjslabs'
 param gatewayName string = 'jslabs-appgw'
+param adminUsername string
+param sshPublicKey string
+param jumpboxName string
+param vmSize string = 'Standard_B1s'
 
 module keyVaultModule 'security/keyvault.bicep' = {
   name: 'deployKeyVault'
@@ -50,8 +54,19 @@ module aksModule 'kubernetes/aks.bicep' = {
     minCount: minCount
     maxCount: maxCount
     nodeSize: nodeSize
+    subnetId: networkModule.outputs.subnetId
     userIdentityId: userIdentityModule.outputs.identityId
     gatewayName: gatewayName
+  }
+}
+
+module bastionHostModule 'kubernetes/bastionHost.bicep' = {
+  name: 'deployBastionHost'
+  params: {
+    adminUsername: adminUsername
+    sshPublicKey: sshPublicKey
+    computerName: jumpboxName
+    vmSize: vmSize
   }
 }
 

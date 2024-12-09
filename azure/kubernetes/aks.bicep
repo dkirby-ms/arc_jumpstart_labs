@@ -1,11 +1,13 @@
-param location string = resourceGroup().location
-param clusterName string = 'myAksCluster'
-param nodeCount int = 1
-param minCount int = 1
-param maxCount int = 3
-param nodeSize string = 'Standard_D2s_v5' // Updated to a more cost-effective node size
+param location string
+param clusterName string
+param nodeCount int
+param minCount int
+param maxCount int
+param nodeSize string
 param userIdentityId string
+param subnetId string
 param gatewayName string
+
 
 resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
   name: clusterName
@@ -17,46 +19,43 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
     }
   }
   properties: {
+    dnsPrefix: clusterName
     agentPoolProfiles: [
       {
-        name: 'nodepool1'
+        name: 'agentpool'
         count: nodeCount
         vmSize: nodeSize
-        minCount: minCount
         maxCount: maxCount
-        enableAutoScaling: true
+        minCount: minCount
+        type: 'VirtualMachineScaleSets'
         mode: 'System'
-        upgradeSettings: {
-          maxSurge: '33%'
-        }
+        vnetSubnetID: subnetId
       }
     ]
-    autoUpgradeProfile: {
-      upgradeChannel: 'stable'
+    networkProfile: {
+      networkPlugin: 'azure'
+      networkPolicy: 'azure'
+      loadBalancerSku: 'standard'
+      outboundType: 'userDefinedRouting'
     }
-    dnsPrefix: clusterName
-    servicePrincipalProfile: {
-      clientId: 'msi'
+    apiServerAccessProfile: {
+      enablePrivateCluster: true
     }
     addonProfiles: {
-      azureKeyvaultSecretsProvider: {
-        enabled: true
-        config: {
-          enableSecretRotation: 'true'
-          rotationPollInterval: '2m'
-        }
-      }
-      httpApplicationRouting: {
-        enabled: true
-      }
       ingressApplicationGateway: {
         enabled: true
         config: {
-          gatewayName: gatewayName
-          podCidrs: '10.244.0.0/16'
+          gatewayId: resourceId('Microsoft.Network/applicationGateways', gatewayName)
+          subnetId: subnetId
         }
       }
     }
+    identityProfile: {
+      kubeletidentity: {
+        resourceId: userIdentityId
+      }
+    }
+    enableRBAC: true
     oidcIssuerProfile: {
       enabled: true
     }
@@ -65,17 +64,8 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
         enabled: true
       }
     }
-    apiServerAccessProfile: {
-      enablePrivateCluster: true
-    }
-    networkProfile: {
-      networkPlugin: 'azure'
-      networkPolicy: 'azure'
-      serviceCidr: '10.1.0.0/16'
-      dnsServiceIP: '10.1.0.10'
-      podCidrs: [
-        '10.244.0.0/16'
-      ]
-    }
   }
 }
+
+output aksClusterId string = aksCluster.id
+output aksClusterName string = aksCluster.name

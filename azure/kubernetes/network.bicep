@@ -4,7 +4,7 @@ param subnetName string = 'aksSubnet'
 param addressPrefix string = '10.0.0.0/16'
 param subnetPrefix string = '10.0.0.0/24'
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-02-01' = {
   name: vnetName
   location: location
   properties: {
