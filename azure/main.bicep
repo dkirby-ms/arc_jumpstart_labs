@@ -41,15 +41,6 @@ module networkModule 'kubernetes/network.bicep' = {
   }
 }
 
-module appGatewayModule 'security/appgw.bicep' = {
-  name: 'deployAppGateway'
-  params: {
-    location: location
-    gatewayName: gatewayName
-    subnetId: networkModule.outputs.subnetId
-  }
-}
-
 module aksModule 'kubernetes/aks.bicep' = {
   name: 'deployAksCluster'
   params: {
@@ -60,7 +51,6 @@ module aksModule 'kubernetes/aks.bicep' = {
     maxCount: maxCount
     nodeSize: nodeSize
     userIdentityId: userIdentityModule.outputs.identityId
-    subnetId: networkModule.outputs.subnetId
     gatewayName: gatewayName
   }
 }

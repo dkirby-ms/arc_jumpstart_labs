@@ -5,7 +5,6 @@ param minCount int = 1
 param maxCount int = 3
 param nodeSize string = 'Standard_D2s_v5' // Updated to a more cost-effective node size
 param userIdentityId string
-param subnetId string
 param gatewayName string
 
 resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
@@ -74,8 +73,9 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
       networkPolicy: 'azure'
       serviceCidr: '10.1.0.0/16'
       dnsServiceIP: '10.1.0.10'
-      podCidr: '10.244.0.0/16'
-      subnetId: subnetId
+      podCidrs: [
+        '10.244.0.0/16'
+      ]
     }
   }
 }
