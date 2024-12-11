@@ -30,6 +30,16 @@ param subnetId string
 @description('Choice to deploy Bastion to connect to the client VM')
 param deployBastion bool = false
 
+@description('The base URL used for accessing artifacts and automation artifacts.')
+param templateBaseUrl string
+
+@description('Target GitHub account')
+param githubAccount string = 'microsoft'
+
+@description('Target GitHub branch')
+param githubBranch string = 'main'
+
+var encodedPassword = base64(windowsAdminPassword)
 var bastionName = 'Labs-Bastion'
 var publicIpAddressName = deployBastion == false ? '${vmName}-PIP' : '${bastionName}-PIP'
 var networkInterfaceName = '${vmName}-NIC'
@@ -124,6 +134,27 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = {
           }
         }
       }
+    }
+  }
+}
+
+resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = {
+  parent: vm
+  name: 'Bootstrap'
+  location: location
+  tags: {
+    displayName: 'config-choco'
+  }
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    protectedSettings: {
+      fileUris: [
+        uri(templateBaseUrl, 'artifacts/Bootstrap.ps1')
+      ]
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -adminPassword ${encodedPassword} -subscriptionId ${subscription().subscriptionId} -resourceGroup ${resourceGroup().name} -azureLocation ${location} -templateBaseUrl ${templateBaseUrl} -githubAccount ${githubAccount} -githubBranch ${githubBranch}'
     }
   }
 }

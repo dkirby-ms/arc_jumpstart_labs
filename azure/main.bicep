@@ -9,10 +9,14 @@ param identityName string = 'id-jslabs'
 param registryName string = 'crjslabs'
 param gatewayName string = 'jslabs-appgw'
 param adminUsername string
-@secure()
+@secure() 
 param adminPassword string
 param vmSize string = 'Standard_D2s_v5'
 param deployBastion bool = false
+param githubAccount string = 'dkirby-ms'
+param githubBranch string = 'main'
+
+var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/arc_jumpstart_labs/${githubBranch}/'
 
 module keyVaultModule 'security/keyvault.bicep' = {
   name: 'deployKeyVault'
@@ -85,6 +89,9 @@ module clientVmModule 'clientVm/clientVm.bicep' = {
     vmSize: vmSize
     deployBastion: deployBastion
     subnetId: networkModule.outputs.cloudSubnetId
+    templateBaseUrl: templateBaseUrl
+    githubAccount: githubAccount
+    githubBranch: githubBranch
   }
 }
 
