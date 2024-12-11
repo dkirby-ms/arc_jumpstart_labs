@@ -9,9 +9,10 @@ param identityName string = 'id-jslabs'
 param registryName string = 'crjslabs'
 param gatewayName string = 'jslabs-appgw'
 param adminUsername string
-param sshPublicKey string
-param jumpboxName string
-param vmSize string = 'Standard_B1s'
+@secure()
+param adminPassword string
+param vmSize string = 'Standard_D2s_v5'
+param deployBastion bool = false
 
 module keyVaultModule 'security/keyvault.bicep' = {
   name: 'deployKeyVault'
@@ -34,7 +35,7 @@ module containerRegistryModule 'kubernetes/containerRegistry.bicep' = {
   params: {
     location: location
     registryName: registryName
-    userIdentityPrincipalId: userIdentityModule.outputs.principalId
+    userIdentityPrincipalId: userIdentityModule.outputs.objectId
   }
 }
 
@@ -42,6 +43,9 @@ module networkModule 'kubernetes/network.bicep' = {
   name: 'deployNetwork'
   params: {
     location: location
+    subnetNameCloud: 'subnet-cloud'
+    subnetNameCloudK3s: 'subnet-k3s'
+    virtualNetworkNameCloud: 'aksVnet'
   }
 }
 
@@ -54,27 +58,33 @@ module aksModule 'kubernetes/aks.bicep' = {
     minCount: minCount
     maxCount: maxCount
     nodeSize: nodeSize
-    subnetId: networkModule.outputs.subnetId
+    subnetId: networkModule.outputs.k3sSubnetId
+    uamiClientId: userIdentityModule.outputs.clientId
+    uamiObjectId: userIdentityModule.outputs.objectId
     userIdentityId: userIdentityModule.outputs.identityId
     gatewayName: gatewayName
   }
-}
-
-module bastionHostModule 'kubernetes/bastionHost.bicep' = {
-  name: 'deployBastionHost'
-  params: {
-    adminUsername: adminUsername
-    sshPublicKey: sshPublicKey
-    computerName: jumpboxName
-    vmSize: vmSize
-  }
+  dependsOn: [
+    roleAssignment
+  ]
 }
 
 module roleAssignment 'security/roleAssignments.bicep' = {
   name: 'roleAssignment'
   params: {
     keyVaultId: keyVaultModule.outputs.keyVaultId
-    userIdentityId: userIdentityModule.outputs.principalId
+    userIdentityId: userIdentityModule.outputs.objectId
+  }
+}
+
+module clientVmModule 'clientVm/clientVm.bicep' = {
+  name: 'deployClientVm'
+  params: {
+    windowsAdminUsername: adminUsername
+    windowsAdminPassword: adminPassword
+    vmSize: vmSize
+    deployBastion: deployBastion
+    subnetId: networkModule.outputs.cloudSubnetId
   }
 }
 

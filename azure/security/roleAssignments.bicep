@@ -9,3 +9,12 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalId: userIdentityId
   }
 }
+
+resource managedIdentityOperatorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVaultId, userIdentityId, 'f1a07417-d97a-45cb-824c-7a7467783830') // Unique GUID for the role assignment
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f1a07417-d97a-45cb-824c-7a7467783830') // Managed Identity Operator role
+    principalId: userIdentityId
+  }
+}

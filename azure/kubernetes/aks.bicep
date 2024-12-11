@@ -5,6 +5,8 @@ param minCount int
 param maxCount int
 param nodeSize string
 param userIdentityId string
+param uamiClientId string
+param uamiObjectId string
 param subnetId string
 param gatewayName string
 
@@ -30,13 +32,13 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
         type: 'VirtualMachineScaleSets'
         mode: 'System'
         vnetSubnetID: subnetId
+        enableAutoScaling: true
       }
     ]
     networkProfile: {
       networkPlugin: 'azure'
-      networkPolicy: 'azure'
       loadBalancerSku: 'standard'
-      outboundType: 'userDefinedRouting'
+      outboundType: 'loadBalancer'
     }
     apiServerAccessProfile: {
       enablePrivateCluster: true
@@ -53,6 +55,8 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
     identityProfile: {
       kubeletidentity: {
         resourceId: userIdentityId
+        clientId: uamiClientId
+        objectId: uamiObjectId
       }
     }
     enableRBAC: true
