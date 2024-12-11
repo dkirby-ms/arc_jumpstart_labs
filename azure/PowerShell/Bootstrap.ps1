@@ -61,7 +61,7 @@ $ErrorActionPreference = 'Continue'
 ##############################################################
 # Copy PowerShell Profile and Reload
 ##############################################################
-Invoke-WebRequest ($templateBaseUrl + "azure/scripts/PSProfile.ps1") -OutFile $PsHome\Profile.ps1
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile $PsHome\Profile.ps1
 .$PsHome\Profile.ps1
 
 ##############################################################
