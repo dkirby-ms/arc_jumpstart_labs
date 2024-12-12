@@ -153,7 +153,7 @@ New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingV
 $ScheduledTaskExecutable = "C:\Program Files\PowerShell\7\pwsh.exe"
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
 $Action = New-ScheduledTaskAction -Execute "${ScheduledTaskExecutable}" -Argument "C:\Labs\PowerShell\LogonScript.ps1"
-Register-ScheduledTask -TaskName "LogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
+Register-ScheduledTask -TaskName "LogonScript" -User $adminUsername -Trigger $Trigger -Action $Action -RunLevel "Highest" -Force
 
 ##############################################################
 # Disabling Windows Server Manager Scheduled Task
