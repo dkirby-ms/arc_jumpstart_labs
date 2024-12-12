@@ -31,38 +31,48 @@ $ErrorActionPreference = 'Continue'
 
 $adminPassword = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($adminPassword))
 
-##############################################################
-# Download configuration data file and declaring directories
-##############################################################
+if ($vmAutologon -eq "true") {
 
-function BITSRequest {
-  Param(
-    [Parameter(Mandatory = $True)]
-    [hashtable]$Params
-  )
-  $url = $Params['Uri']
-  $filename = $Params['Filename']
-  $download = Start-BitsTransfer -Source $url -Destination $filename -Asynchronous
-  $ProgressPreference = "Continue"
-  while ($download.JobState -ne "Transferred") {
-    if ($download.JobState -eq "TransientError") {
-      Get-BitsTransfer $download.name | Resume-BitsTransfer -Asynchronous
-    }
-    [int] $dlProgress = ($download.BytesTransferred / $download.BytesTotal) * 100;
-    Write-Progress -Activity "Downloading File $filename..." -Status "$dlProgress% Complete:" -PercentComplete $dlProgress;
+  Write-Host "Configuring VM Autologon"
+
+  Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "AutoAdminLogon" "1"
+  Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultUserName" $adminUsername
+  Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultPassword" $adminPassword
+  if($flavor -eq "DataOps"){
+      Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultDomainName" "jumpstart.local"
   }
-  Complete-BitsTransfer $download.JobId
-  Write-Progress -Activity "Downloading File $filename..." -Status "Ready" -Completed
-  $ProgressPreference = "SilentlyContinue"
+} else {
+
+  Write-Host "Not configuring VM Autologon"
+
 }
 
+##############################################################
+# Extending C:\ partition to the maximum size
+##############################################################
+Write-Host "Extending C:\ partition to the maximum size"
+Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
+
 $ErrorActionPreference = 'Continue'
+
+##############################################################
+# Creating Ag paths
+##############################################################
+$paths = @("C:\Labs\", "C:\Labs\Tools\", "C:\Labs\Logs\", "C:\Labs\PowerShell\", "C:\Labs\Icons\")
+Write-Output "Creating Ag paths"
+foreach ($path in $paths) {
+  Write-Output "Creating path $path"
+  New-Item -ItemType Directory $path -Force
+}
+
+Start-Transcript -Path ("C:\Labs\Logs\Bootstrap.log")
 
 
 ##############################################################
 # Copy PowerShell Profile and Reload
 ##############################################################
 Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile $PsHome\Profile.ps1
+Invoke-WebRequest ($templateBaseUrl + "artifacts/PowerShell/PSProfile.ps1") -OutFile "C:\PowerShell\Profile.ps1"
 .$PsHome\Profile.ps1
 
 ##############################################################
@@ -91,58 +101,7 @@ foreach ($module in $modules) {
 ##############################################################
 # Download artifacts
 ##############################################################
-#Invoke-WebRequest ($templateBaseUrl + "artifacts/PowerShell/Winget.ps1") -OutFile "$AgPowerShellDir\Winget.ps1"
-
-## Winget
-Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-#$null = Repair-WinGetPackageManager -AllUsers -Force -Latest
-$winget = Join-Path -Path $env:LOCALAPPDATA -ChildPath Microsoft\WindowsApps\winget.exe
-& $winget install Microsoft.WindowsTerminal --version 1.18.3181.0 -s winget --silent --accept-package-agreements
-##############################################################
-# Install Winget packages
-##############################################################
-$packages = @(
-  'Microsoft.AzureCLI',
-  'Microsoft.PowerShell',
-  'Microsoft.Bicep',
-  'Kubernetes.kubectl',
-  'Microsoft.Edge',
-  'Microsoft.Azure.AZCopy.10',
-  'Microsoft.VisualStudioCode'
-)
-$maxRetries = 3
-$retryDelay = 30  # seconds
-
-$retryCount = 0
-$success = $false
-
-while (-not $success -and $retryCount -lt $maxRetries) {
-    Write-Host "Winget packages specified"
-
-    try {
-        foreach ($app in $packages) {
-            Write-Host "Installing $app"
-            & $winget install -e --id $app --silent --accept-package-agreements --accept-source-agreements --ignore-warnings
-        }
-
-        # If the command succeeds, set $success to $true to exit the loop
-        $success = $true
-    }
-    catch {
-        # If an exception occurs, increment the retry count
-        $retryCount++
-
-        # If the maximum number of retries is not reached yet, display an error message
-        if ($retryCount -lt $maxRetries) {
-            Write-Host "Attempt $retryCount failed. Retrying in $retryDelay seconds..."
-            Start-Sleep -Seconds $retryDelay
-        }
-        else {
-            Write-Host "All attempts failed. Exiting..."
-            exit 1  # Stop script execution if maximum retries reached
-        }
-    }
-}
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/LogonScript.ps1") -OutFile "C:\PowerShell\LogonScript.ps1"
 
 ##############################################################
 # Disable Network Profile prompt
@@ -187,23 +146,31 @@ If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
 }
 New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueTrue -PropertyType DWORD -Force
 
-##############################################################
-# Installing Posh-SSH PowerShell Module
-##############################################################
-Install-Module -Name Posh-SSH -Force
+
+$ScheduledTaskExecutable = "C:\Program Files\PowerShell\7\pwsh.exe"
+$Trigger = New-ScheduledTaskTrigger -AtLogOn
+$Action = New-ScheduledTaskAction -Execute "${ScheduledTaskExecutable}" -Argument "C:\PowerShell\LogonScript.ps1"
+Register-ScheduledTask -TaskName "LogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
 
 ##############################################################
 # Disabling Windows Server Manager Scheduled Task
 ##############################################################
 Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
+# Restart machine to initiate VM autologon
+$action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-Command "Restart-Computer -Force"'
+$trigger = New-ScheduledTaskTrigger -Once -At ((Get-Date).AddSeconds(10))
+$taskName = "Restart-Computer-Delayed"
 
-Stop-Transcript
+# Define the restart action and schedule it to run after 10 seconds
+$action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-Command "Restart-Computer -Force"'
+$trigger = New-ScheduledTaskTrigger -Once -At ((Get-Date).AddSeconds(10))
+# Configure the task to run with highest privileges and use the current user's credentials
+$principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
-##############################################################
-# Clean up Bootstrap.log
-##############################################################
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $taskName -Principal $principal -Description "Restart computer after script exits"
+
 Write-Host "Clean up Bootstrap.log"
 Stop-Transcript
-$logSuppress = Get-Content "$AgDirectory\Bootstrap.log" | Where-Object { $_ -notmatch "Host Application: powershell.exe" }
-$logSuppress | Set-Content "$AgDirectory\Bootstrap.log" -Force
+$logSuppress = Get-Content "C:\Labs\Logs\Bootstrap.log" | Where-Object { $_ -notmatch "Host Application: powershell.exe" }
+$logSuppress | Set-Content "C:\Labs\Logs\Bootstrap.log" -Force
