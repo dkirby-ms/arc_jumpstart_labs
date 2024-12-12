@@ -104,7 +104,7 @@ foreach ($module in $modules) {
 ##############################################################
 # Download artifacts
 ##############################################################
-Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/LogonScript.ps1") -OutFile "C:\PowerShell\LogonScript.ps1"
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/LogonScript.ps1") -OutFile "C:\Labs\PowerShell\LogonScript.ps1"
 
 ##############################################################
 # Disable Network Profile prompt
@@ -152,7 +152,7 @@ New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingV
 
 $ScheduledTaskExecutable = "C:\Program Files\PowerShell\7\pwsh.exe"
 $Trigger = New-ScheduledTaskTrigger -AtLogOn
-$Action = New-ScheduledTaskAction -Execute "${ScheduledTaskExecutable}" -Argument "C:\PowerShell\LogonScript.ps1"
+$Action = New-ScheduledTaskAction -Execute "${ScheduledTaskExecutable}" -Argument "C:\Labs\PowerShell\LogonScript.ps1"
 Register-ScheduledTask -TaskName "LogonScript" -User $adminUsername -Action $Action -RunLevel "Highest" -Force
 
 ##############################################################
