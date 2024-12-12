@@ -8,7 +8,8 @@ param (
   [string]$aksClusterName,
   [string]$githubAccount,
   [string]$githubBranch,
-  [string]$namingGuid
+  [string]$namingGuid,
+  [string]$templateBaseUrl
 )
 
 ##############################################################

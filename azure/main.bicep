@@ -16,7 +16,7 @@ param deployBastion bool = false
 param githubAccount string = 'dkirby-ms'
 param githubBranch string = 'main'
 
-var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/arc_jumpstart_labs/${githubBranch}/'
+var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/arc_jumpstart_labs/refs/heads/${githubBranch}/'
 
 module keyVaultModule 'security/keyvault.bicep' = {
   name: 'deployKeyVault'
@@ -92,6 +92,6 @@ module clientVmModule 'clientVm/clientVm.bicep' = {
     templateBaseUrl: templateBaseUrl
     githubAccount: githubAccount
     githubBranch: githubBranch
+    aksClusterName: clusterName
   }
 }
-
