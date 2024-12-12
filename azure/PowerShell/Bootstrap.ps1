@@ -47,6 +47,9 @@ if ($vmAutologon -eq "true") {
 
 }
 
+$EdgeSettingRegistryPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
+$EdgeSettingValueTrue    = '00000001'
+$EdgeSettingValueFalse   = '00000000'
 ##############################################################
 # Extending C:\ partition to the maximum size
 ##############################################################
@@ -72,7 +75,7 @@ Start-Transcript -Path ("C:\Labs\Logs\Bootstrap.log")
 # Copy PowerShell Profile and Reload
 ##############################################################
 Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile $PsHome\Profile.ps1
-Invoke-WebRequest ($templateBaseUrl + "artifacts/PowerShell/PSProfile.ps1") -OutFile "C:\PowerShell\Profile.ps1"
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile "C:\Labs\PowerShell\Profile.ps1"
 .$PsHome\Profile.ps1
 
 ##############################################################
@@ -117,34 +120,34 @@ if (-not (Test-Path $RegistryPath)) {
 # Disable Microsoft Edge sidebar
 $Name = 'HubsSidebarEnabled'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
+  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueFalse -PropertyType DWORD -Force
+New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueFalse -PropertyType DWORD -Force
 
 # Disable Microsoft Edge first-run Welcome screen
 $Name = 'HideFirstRunExperience'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
+  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueTrue -PropertyType DWORD -Force
+New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueTrue -PropertyType DWORD -Force
 
 # Disable Microsoft Edge "Personalize your web experience" prompt
 $Name = 'PersonalizationReportingEnabled'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
+  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueFalse -PropertyType DWORD -Force
+New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueFalse -PropertyType DWORD -Force
 
 # Show Favorites Bar in Microsoft Edge
 $Name = 'FavoritesBarEnabled'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
+  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueTrue -PropertyType DWORD -Force
+New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueTrue -PropertyType DWORD -Force
 
 
 $ScheduledTaskExecutable = "C:\Program Files\PowerShell\7\pwsh.exe"
