@@ -95,7 +95,7 @@ foreach ($module in $modules) {
 
 ## Winget
 Install-PSResource -Name Microsoft.WinGet.Client -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-$null = Repair-WinGetPackageManager -AllUsers -Force -Latest
+#$null = Repair-WinGetPackageManager -AllUsers -Force -Latest
 $winget = Join-Path -Path $env:LOCALAPPDATA -ChildPath Microsoft\WindowsApps\winget.exe
 & $winget install Microsoft.WindowsTerminal --version 1.18.3181.0 -s winget --silent --accept-package-agreements
 ##############################################################
