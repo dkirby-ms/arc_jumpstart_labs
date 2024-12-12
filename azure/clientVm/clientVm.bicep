@@ -34,10 +34,13 @@ param deployBastion bool = false
 param templateBaseUrl string
 
 @description('Target GitHub account')
-param githubAccount string = 'microsoft'
+param githubAccount string
 
 @description('Target GitHub branch')
-param githubBranch string = 'main'
+param githubBranch string
+
+@description('AKS Cluster name')
+param aksClusterName string
 
 var encodedPassword = base64(windowsAdminPassword)
 var bastionName = 'Labs-Bastion'
@@ -154,7 +157,7 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' =
       fileUris: [
         uri(templateBaseUrl, 'azure/PowerShell/Bootstrap.ps1')
       ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -adminPassword ${encodedPassword} -subscriptionId ${subscription().subscriptionId} -resourceGroup ${resourceGroup().name} -azureLocation ${location} -templateBaseUrl ${templateBaseUrl} -githubAccount ${githubAccount} -githubBranch ${githubBranch}'
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -adminPassword ${encodedPassword} -tenantId ${tenant()} -resourceGroup ${resourceGroup().name} -subscriptionId ${subscription().subscriptionId} -azureLocation ${location} -aksClusterName ${aksClusterName} -templateBaseUrl ${templateBaseUrl} -githubAccount ${githubAccount} -githubBranch ${githubBranch}'
     }
   }
 }
