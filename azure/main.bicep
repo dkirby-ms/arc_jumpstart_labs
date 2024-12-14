@@ -15,6 +15,7 @@ param vmSize string = 'Standard_D2s_v5'
 param deployBastion bool = false
 param githubAccount string = 'dkirby-ms'
 param githubBranch string = 'main'
+param vmAutologon bool = true
 
 var templateBaseUrl = 'https://raw.githubusercontent.com/${githubAccount}/arc_jumpstart_labs/refs/heads/${githubBranch}/'
 
@@ -93,5 +94,6 @@ module clientVmModule 'clientVm/clientVm.bicep' = {
     githubAccount: githubAccount
     githubBranch: githubBranch
     aksClusterName: clusterName
+    vmAutologon: vmAutologon
   }
 }

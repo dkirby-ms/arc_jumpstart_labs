@@ -6,11 +6,11 @@ Set-PSDebug -Strict
 #####################################################################
 # Initialize the environment
 #####################################################################
-$global:ToolsDir = "C:\Labs\Tools"
-$global:IconsDir = "C:\Labs\Icons"
-$global:PowerShellDir = "C:\Labs\PowerShell"
-$global:LogsDir = "C:\Labs\Logs"
-$global:githubAccount = $Env:githubAccount
+$global:Config = Import-PowerShellDataFile -Path $Env:ConfigPath
+$global:ToolsDir = $Config.Folders["ToolsDir"]
+$global:IconsDir = $Config.Folders["IconDir"]
+$global:PowerShellDir = $Config.Folders["PowerShellDir"]
+$global:LogsDir = $Config.Folders["LogsDir"]
 $global:githubBranch = $Env:githubBranch
 $global:resourceGroup = $Env:resourceGroup
 $global:azureLocation = $Env:azureLocation
@@ -33,18 +33,6 @@ $winget = Join-Path -Path $env:LOCALAPPDATA -ChildPath Microsoft\WindowsApps\win
 ##############################################################
 # Install Winget packages
 ##############################################################
-$packages = @(
-  'Microsoft.AzureCLI',
-  'Microsoft.PowerShell',
-  'Microsoft.Bicep',
-  'Kubernetes.kubectl',
-  'Microsoft.Edge',
-  'Microsoft.Azure.AZCopy.10',
-  'Microsoft.VisualStudioCode',
-  'Git.Git',
-  'Helm.Helm',
-  'Derailed.K9s'
-)
 $maxRetries = 3
 $retryDelay = 30  # seconds
 
@@ -55,7 +43,7 @@ while (-not $success -and $retryCount -lt $maxRetries) {
     Write-Host "Winget packages specified"
 
     try {
-        foreach ($app in $packages) {
+        foreach ($app in $Config.Packages) {
             Write-Host "Installing $app"
             & $winget install -e --id $app --silent --accept-package-agreements --accept-source-agreements --ignore-warnings
         }
@@ -93,34 +81,34 @@ if (-not (Test-Path $RegistryPath)) {
 # Disable Microsoft Edge sidebar
 $Name = 'HubsSidebarEnabled'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $Config.EdgeSettingRegistryPath)) {
+  New-Item -Path $Config.EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueFalse -PropertyType DWORD -Force
+New-ItemProperty -Path $Config.EdgeSettingRegistryPath -Name $Name -Value $Config.EdgeSettingValueFalse -PropertyType DWORD -Force
 
 # Disable Microsoft Edge first-run Welcome screen
 $Name = 'HideFirstRunExperience'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $Config.EdgeSettingRegistryPath)) {
+  New-Item -Path $Config.EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueTrue -PropertyType DWORD -Force
+New-ItemProperty -Path $Config.EdgeSettingRegistryPath -Name $Name -Value $Config.EdgeSettingValueTrue -PropertyType DWORD -Force
 
 # Disable Microsoft Edge "Personalize your web experience" prompt
 $Name = 'PersonalizationReportingEnabled'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $Config.EdgeSettingRegistryPath)) {
+  New-Item -Path $Config.EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueFalse -PropertyType DWORD -Force
+New-ItemProperty -Path $Config.EdgeSettingRegistryPath -Name $Name -Value $Config.EdgeSettingValueFalse -PropertyType DWORD -Force
 
 # Show Favorites Bar in Microsoft Edge
 $Name = 'FavoritesBarEnabled'
 # Create the key if it does not exist
-If (-NOT (Test-Path $AgConfig.EdgeSettingRegistryPath)) {
-  New-Item -Path $AgConfig.EdgeSettingRegistryPath -Force | Out-Null
+If (-NOT (Test-Path $Config.EdgeSettingRegistryPath)) {
+  New-Item -Path $Config.EdgeSettingRegistryPath -Force | Out-Null
 }
-New-ItemProperty -Path $AgConfig.EdgeSettingRegistryPath -Name $Name -Value $AgConfig.EdgeSettingValueTrue -PropertyType DWORD -Force
+New-ItemProperty -Path $Config.EdgeSettingRegistryPath -Name $Name -Value $Config.EdgeSettingValueTrue -PropertyType DWORD -Force
 
 ##############################################################
 # Installing Posh-SSH PowerShell Module

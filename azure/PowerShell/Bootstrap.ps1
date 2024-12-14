@@ -9,7 +9,8 @@ param (
   [string]$githubAccount,
   [string]$githubBranch,
   [string]$namingGuid,
-  [string]$templateBaseUrl
+  [string]$templateBaseUrl,
+  [string]$vmAutologon
 )
 
 ##############################################################
@@ -26,6 +27,7 @@ param (
 [System.Environment]::SetEnvironmentVariable('githubAccount', $githubAccount, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('githubBranch', $githubBranch, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('namingGuid', $namingGuid, [System.EnvironmentVariableTarget]::Machine)
+[System.Environment]::SetEnvironmentVariable('vmAutologon', $vmAutologon, [System.EnvironmentVariableTarget]::Machine)
 
 $ErrorActionPreference = 'Continue'
 
@@ -38,9 +40,7 @@ if ($vmAutologon -eq "true") {
   Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "AutoAdminLogon" "1"
   Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultUserName" $adminUsername
   Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultPassword" $adminPassword
-  if($flavor -eq "DataOps"){
-      Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" "DefaultDomainName" "jumpstart.local"
-  }
+
 } else {
 
   Write-Host "Not configuring VM Autologon"
@@ -59,23 +59,31 @@ Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter 
 $ErrorActionPreference = 'Continue'
 
 ##############################################################
+# Download configuration data file and declaring directories
+##############################################################
+$ConfigurationDataFile = "C:\Temp\Config.psd1"
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/Config.psd1") -OutFile $ConfigurationDataFile
+$Config = Import-PowerShellDataFile -Path $ConfigurationDataFile
+[System.Environment]::SetEnvironmentVariable('ConfigPath', ($Config.Folders["PowerShellDir"] + "\Config.psd1"), [System.EnvironmentVariableTarget]::Machine)
+Copy-Item $ConfigurationDataFile "$AgPowerShellDir\AgConfig.psd1" -Force
+
+##############################################################
 # Creating Ag paths
 ##############################################################
-$paths = @("C:\Labs\", "C:\Labs\Tools\", "C:\Labs\Logs\", "C:\Labs\PowerShell\", "C:\Labs\Icons\")
 Write-Output "Creating Ag paths"
-foreach ($path in $paths) {
+foreach ($path in $Config.Folders.values) {
   Write-Output "Creating path $path"
   New-Item -ItemType Directory $path -Force
 }
 
-Start-Transcript -Path ("C:\Labs\Logs\Bootstrap.log")
+Start-Transcript -Path ($Config.Folders["LogsDir"] + "\Bootstrap.log")
 
 
 ##############################################################
 # Copy PowerShell Profile and Reload
 ##############################################################
 Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile $PsHome\Profile.ps1
-Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile "C:\Labs\PowerShell\Profile.ps1"
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/PSProfile.ps1") -OutFile ($Config.Folders["PowerShellDir"] + "\Profile.ps1")
 .$PsHome\Profile.ps1
 
 ##############################################################
@@ -104,50 +112,9 @@ foreach ($module in $modules) {
 ##############################################################
 # Download artifacts
 ##############################################################
-Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/LogonScript.ps1") -OutFile "C:\Labs\PowerShell\LogonScript.ps1"
+Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/LogonScript.ps1") -OutFile ($Config.Folders["PowerShellDir"] + "\LogonScript.ps1")
 
-##############################################################
-# Disable Network Profile prompt
-##############################################################
-$RegistryPath = "HKLM:\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
-if (-not (Test-Path $RegistryPath)) {
-  New-Item -Path $RegistryPath -Force | Out-Null
-}
 
-##############################################################
-# Updating Microsoft Edge startup settings
-##############################################################
-# Disable Microsoft Edge sidebar
-$Name = 'HubsSidebarEnabled'
-# Create the key if it does not exist
-If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
-  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
-}
-New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueFalse -PropertyType DWORD -Force
-
-# Disable Microsoft Edge first-run Welcome screen
-$Name = 'HideFirstRunExperience'
-# Create the key if it does not exist
-If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
-  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
-}
-New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueTrue -PropertyType DWORD -Force
-
-# Disable Microsoft Edge "Personalize your web experience" prompt
-$Name = 'PersonalizationReportingEnabled'
-# Create the key if it does not exist
-If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
-  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
-}
-New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueFalse -PropertyType DWORD -Force
-
-# Show Favorites Bar in Microsoft Edge
-$Name = 'FavoritesBarEnabled'
-# Create the key if it does not exist
-If (-NOT (Test-Path $EdgeSettingRegistryPath)) {
-  New-Item -Path $EdgeSettingRegistryPath -Force | Out-Null
-}
-New-ItemProperty -Path $EdgeSettingRegistryPath -Name $Name -Value $EdgeSettingValueTrue -PropertyType DWORD -Force
 
 
 $ScheduledTaskExecutable = "C:\Program Files\PowerShell\7\pwsh.exe"

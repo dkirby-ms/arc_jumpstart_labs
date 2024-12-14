@@ -42,6 +42,9 @@ param githubBranch string
 @description('AKS Cluster name')
 param aksClusterName string
 
+@description('Automatically runs the logon script without waiting for user')
+param vmAutologon bool
+
 var encodedPassword = base64(windowsAdminPassword)
 var bastionName = 'Labs-Bastion'
 var publicIpAddressName = deployBastion == false ? '${vmName}-PIP' : '${bastionName}-PIP'
@@ -157,7 +160,7 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' =
       fileUris: [
         uri(templateBaseUrl, 'azure/PowerShell/Bootstrap.ps1')
       ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -adminPassword ${encodedPassword} -tenantId ${tenant()} -resourceGroup ${resourceGroup().name} -subscriptionId ${subscription().subscriptionId} -azureLocation ${location} -aksClusterName ${aksClusterName} -templateBaseUrl ${templateBaseUrl} -githubAccount ${githubAccount} -githubBranch ${githubBranch}'
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -adminUsername ${windowsAdminUsername} -adminPassword ${encodedPassword} -tenantId ${tenant()} -resourceGroup ${resourceGroup().name} -subscriptionId ${subscription().subscriptionId} -azureLocation ${location} -aksClusterName ${aksClusterName} -templateBaseUrl ${templateBaseUrl} -githubAccount ${githubAccount} -githubBranch ${githubBranch} -vmAutologon ${vmAutologon}'
     }
   }
 }
