@@ -29,8 +29,6 @@ param (
 [System.Environment]::SetEnvironmentVariable('namingGuid', $namingGuid, [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable('vmAutologon', $vmAutologon, [System.EnvironmentVariableTarget]::Machine)
 
-$ErrorActionPreference = 'Continue'
-
 $adminPassword = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($adminPassword))
 
 if ($vmAutologon -eq "true") {
@@ -56,8 +54,6 @@ $EdgeSettingValueFalse   = '00000000'
 Write-Host "Extending C:\ partition to the maximum size"
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
 
-$ErrorActionPreference = 'Continue'
-
 ##############################################################
 # Download configuration data file and declaring directories
 ##############################################################
@@ -65,12 +61,12 @@ $ConfigurationDataFile = "C:\Temp\Config.psd1"
 Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/Config.psd1") -OutFile $ConfigurationDataFile
 $Config = Import-PowerShellDataFile -Path $ConfigurationDataFile
 [System.Environment]::SetEnvironmentVariable('ConfigPath', ($Config.Folders["PowerShellDir"] + "\Config.psd1"), [System.EnvironmentVariableTarget]::Machine)
-Copy-Item $ConfigurationDataFile "$AgPowerShellDir\AgConfig.psd1" -Force
+Copy-Item $ConfigurationDataFile ($Config.Folders["PowerShellDir"] + "\Config.psd1") -Force
 
 ##############################################################
 # Creating Ag paths
 ##############################################################
-Write-Output "Creating Ag paths"
+Write-Output "Creating paths"
 foreach ($path in $Config.Folders.values) {
   Write-Output "Creating path $path"
   New-Item -ItemType Directory $path -Force
