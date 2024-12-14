@@ -6,10 +6,10 @@ Set-PSDebug -Strict
 #####################################################################
 # Initialize the environment
 #####################################################################
-$global:ToolsDir = $AgConfig.AgDirectories["AgToolsDir"]
-$global:IconsDir = $AgConfig.AgDirectories["AgIconDir"]
-$global:PowerShellDir    = $AgConfig.AgDirectories["AgPowerShellDir"]
-$global:LogsDir = $AgConfig.AgDirectories["AgLogsDir"]
+$global:ToolsDir = "C:\Labs\Tools"
+$global:IconsDir = "C:\Labs\Icons"
+$global:PowerShellDir = "C:\Labs\PowerShell"
+$global:LogsDir = "C:\Labs\Logs"
 $global:githubAccount = $Env:githubAccount
 $global:githubBranch = $Env:githubBranch
 $global:resourceGroup = $Env:resourceGroup
@@ -40,7 +40,10 @@ $packages = @(
   'Kubernetes.kubectl',
   'Microsoft.Edge',
   'Microsoft.Azure.AZCopy.10',
-  'Microsoft.VisualStudioCode'
+  'Microsoft.VisualStudioCode',
+  'Git.Git',
+  'Helm.Helm',
+  'Derailed.K9s'
 )
 $maxRetries = 3
 $retryDelay = 30  # seconds
