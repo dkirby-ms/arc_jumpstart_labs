@@ -96,15 +96,15 @@ Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
 Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
 Remove-Item .\PowerShell7.msi
 
-Copy-Item $PsHome\Profile.ps1 -Destination "C:\Program Files\PowerShell\7\"
+#Copy-Item $PsHome\Profile.ps1 -Destination "C:\Program Files\PowerShell\7\"
 
-# Installing PowerShell Modules
-Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force
-$modules = @("Az", "Az.ConnectedMachine", "Az.ConnectedKubernetes", "Az.CustomLocation", "Microsoft.PowerShell.SecretManagement", "Pester")
+# # Installing PowerShell Modules
+# Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force
+# $modules = @("Az", "Az.ConnectedMachine", "Az.ConnectedKubernetes", "Az.CustomLocation", "Microsoft.PowerShell.SecretManagement", "Pester")
 
-foreach ($module in $modules) {
-    Install-PSResource -Name $module -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
-}
+# foreach ($module in $modules) {
+#     Install-PSResource -Name $module -Scope AllUsers -Quiet -AcceptLicense -TrustRepository
+# }
 
 ##############################################################
 # Download artifacts
