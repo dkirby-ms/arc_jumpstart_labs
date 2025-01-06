@@ -10,7 +10,7 @@
         TempDir         = "C:\Temp"
     }
 
-    $packages = @(
+    Packages = @(
     'Microsoft.AzureCLI',
     'Microsoft.PowerShell',
     'Microsoft.Bicep',

@@ -60,8 +60,6 @@ Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter 
 $ConfigurationDataFile = "C:\Temp\Config.psd1"
 Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/Config.psd1") -OutFile $ConfigurationDataFile
 $Config = Import-PowerShellDataFile -Path $ConfigurationDataFile
-[System.Environment]::SetEnvironmentVariable('ConfigPath', ($Config.Folders["PowerShellDir"] + "\Config.psd1"), [System.EnvironmentVariableTarget]::Machine)
-Copy-Item $ConfigurationDataFile ($Config.Folders["PowerShellDir"] + "\Config.psd1") -Force
 
 ##############################################################
 # Creating Ag paths
@@ -71,6 +69,11 @@ foreach ($path in $Config.Folders.values) {
   Write-Output "Creating path $path"
   New-Item -ItemType Directory $path -Force
 }
+
+[System.Environment]::SetEnvironmentVariable('ConfigPath', ($Config.Folders["PowerShellDir"] + "\Config.psd1"), [System.EnvironmentVariableTarget]::Machine)
+Copy-Item $ConfigurationDataFile ($Config.Folders["PowerShellDir"] + "\Config.psd1") -Force
+
+
 
 Start-Transcript -Path ($Config.Folders["LogsDir"] + "\Bootstrap.log")
 
@@ -96,8 +99,6 @@ Remove-Item .\PowerShell7.msi
 Copy-Item $PsHome\Profile.ps1 -Destination "C:\Program Files\PowerShell\7\"
 
 # Installing PowerShell Modules
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-
 Install-Module -Name Microsoft.PowerShell.PSResourceGet -Force
 $modules = @("Az", "Az.ConnectedMachine", "Az.ConnectedKubernetes", "Az.CustomLocation", "Microsoft.PowerShell.SecretManagement", "Pester")
 
@@ -109,8 +110,6 @@ foreach ($module in $modules) {
 # Download artifacts
 ##############################################################
 Invoke-WebRequest ($templateBaseUrl + "azure/PowerShell/LogonScript.ps1") -OutFile ($Config.Folders["PowerShellDir"] + "\LogonScript.ps1")
-
-
 
 
 $ScheduledTaskExecutable = "C:\Program Files\PowerShell\7\pwsh.exe"
